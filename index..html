@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roxxon News Feed</title>
+
+<style>
+body{
+margin:0;
+font-family:Arial, Helvetica, sans-serif;
+background:#0b0f1a;
+color:white;
+}
+
+header{
+background:#111827;
+padding:15px;
+border-bottom:2px solid #e11d48;
+}
+
+#city{
+font-size:20px;
+font-weight:bold;
+}
+
+#weather{
+font-size:14px;
+opacity:.8;
+}
+
+.feed{
+max-width:700px;
+margin:auto;
+padding:20px;
+}
+
+.post{
+background:#1f2937;
+padding:15px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+.username{
+color:#60a5fa;
+font-weight:bold;
+}
+
+.time{
+font-size:12px;
+opacity:.7;
+}
+
+.comments{
+margin-top:10px;
+}
+
+.comment{
+background:#111827;
+padding:8px;
+border-radius:6px;
+margin-top:6px;
+font-size:14px;
+}
+
+input,button{
+margin-top:8px;
+padding:8px;
+border-radius:6px;
+border:none;
+}
+
+input{
+width:70%;
+}
+
+button{
+background:#e11d48;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+opacity:.8;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+<div id="city">Loading city...</div>
+<div id="weather">Loading weather...</div>
+</header>
+
+<div class="feed" id="feed"></div>
+
+<script>
+
+const posts=[
+{
+user:"DailyBugleFan",
+text:"Did anyone else see Spider-Man swinging across Midtown today?"
+},
+{
+user:"HarlemVoice",
+text:"Traffic is wild today. Something big is happening downtown."
+},
+{
+user:"NYCWatcher",
+text:"Roxxon trucks spotted again near the bridge."
+}
+];
+
+const feed=document.getElementById("feed");
+
+function createPost(post,index){
+
+const div=document.createElement("div");
+div.className="post";
+
+div.innerHTML=`
+<div class="username">@${post.user}</div>
+<div>${post.text}</div>
+<div class="time">${new Date().toLocaleString()}</div>
+
+<div class="comments" id="comments-${index}"></div>
+
+<input id="input-${index}" placeholder="Write a reply...">
+<button onclick="addComment(${index})">Reply</button>
+`;
+
+feed.appendChild(div);
+}
+
+posts.forEach(createPost);
+
+function addComment(index){
+
+const input=document.getElementById(`input-${index}`);
+const text=input.value.trim();
+
+if(!text) return;
+
+const comments=document.getElementById(`comments-${index}`);
+
+const div=document.createElement("div");
+div.className="comment";
+div.textContent=text;
+
+comments.appendChild(div);
+
+input.value="";
+}
+
+function loadWeather(lat,lon){
+
+fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("weather").textContent=
+`Temperature: ${data.current_weather.temperature}°C`;
+});
+
+}
+
+function loadCity(lat,lon){
+
+fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&count=1`)
+.then(r=>r.json())
+.then(data=>{
+document.getElementById("city").textContent=data.results[0].name;
+});
+
+}
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(pos=>{
+const lat=pos.coords.latitude;
+const lon=pos.coords.longitude;
+
+loadWeather(lat,lon);
+loadCity(lat,lon);
+});
+
+}else{
+
+document.getElementById("city").textContent="Unknown city";
+document.getElementById("weather").textContent="Weather unavailable";
+
+}
+
+</script>
+
+</body>
+</html>
